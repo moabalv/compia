@@ -1,18 +1,36 @@
 // src/pages/AdminPage.jsx
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 export const AdminPage = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
   const navigate = useNavigate();
+  const [books, setBooks] = useState([]);
+  const [editingBookId, setEditingBookId] = useState(null);
 
+  // Carrega os livros existentes
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const res = await fetch('/api/products'); // ajuste se seu endpoint for diferente
+        if (!res.ok) throw new Error(`Erro ${res.status}`);
+        const data = await res.json();
+        setBooks(data);
+      } catch (err) {
+        console.error('Erro ao buscar livros:', err);
+        setBooks([]);
+      }
+    };
+    fetchBooks();
+  }, []);
+
+  // Submissão do formulário (criação ou edição)
   const onSubmit = async (data) => {
-    // 1. Estrutura o objeto do livro como nossa aplicação espera
     const newBook = {
-      id: data.title.toLowerCase().replace(/\s+/g, '-'), // Cria um ID simples
       title: data.title,
       author: data.author,
-      coverUrl: "/images/covers/placeholder.jpg", // Imagem placeholder
+      coverUrl: "/images/covers/placeholder.jpg",
       price: {
         physical: data.price_physical,
         digital: data.price_digital,
@@ -27,22 +45,26 @@ export const AdminPage = () => {
       },
     };
 
-    // 2. Envia os dados para nossa API mockada
     try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const url = editingBookId ? `/api/products/${editingBookId}` : `/api/products`;
+      const method = editingBookId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBook),
       });
 
       if (response.ok) {
-        alert('Livro adicionado com sucesso!');
-        reset(); // Limpa o formulário
-        navigate('/'); // Navega para a home para ver o resultado
+        alert(editingBookId ? 'Livro atualizado com sucesso!' : 'Livro adicionado com sucesso!');
+        reset();
+        setEditingBookId(null);
+
+        // Recarregar lista
+        const res = await fetch('/api/products');
+        setBooks(await res.json());
       } else {
-        throw new Error('Falha ao adicionar o livro');
+        throw new Error('Falha ao salvar o livro');
       }
     } catch (error) {
       console.error(error);
@@ -50,11 +72,47 @@ export const AdminPage = () => {
     }
   };
 
+  // Excluir livro
+  const handleDelete = async (id) => {
+    if (!confirm("Tem certeza que deseja excluir este livro?")) return;
+
+    try {
+      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        alert("Livro excluído!");
+        setBooks(books.filter(b => b.id !== id));
+      } else {
+        throw new Error('Erro ao excluir');
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir livro.");
+    }
+  };
+
+  // Editar livro (carrega dados no formulário)
+  const handleEdit = (book) => {
+    setEditingBookId(book.id);
+    setValue("title", book.title);
+    setValue("author", book.author);
+    setValue("description", book.description);
+    setValue("price_physical", book.price.physical);
+    setValue("price_digital", book.price.digital);
+    setValue("categories", book.categories.join(', '));
+    setValue("isbn", book.details.isbn);
+    setValue("pages", book.details.pages);
+    setValue("year", book.details.year);
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="mb-8 text-3xl font-bold">Adicionar Novo Livro</h1>
+      {/* Título dinâmico */}
+      <h1 className="mb-8 text-3xl font-bold">
+        {editingBookId ? "Editar Livro" : "Adicionar Novo Livro"}
+      </h1>
+
+      {/* Formulário */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-2xl mx-auto">
-        {/* Campos do formulário... */}
         <div>
           <label htmlFor="title">Título</label>
           <input id="title" {...register("title", { required: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
@@ -95,10 +153,33 @@ export const AdminPage = () => {
             <input id="year" type="number" {...register("year", { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
           </div>
         </div>
+
         <button type="submit" className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700">
-          Adicionar Livro
+          {editingBookId ? "Salvar Alterações" : "Adicionar Livro"}
         </button>
       </form>
+
+      {/* Lista de livros */}
+      <h2 className="mt-12 mb-4 text-2xl font-bold">Livros Cadastrados</h2>
+      {books.length === 0 ? (
+        <p>Nenhum livro cadastrado.</p>
+      ) : (
+        <ul className="space-y-2">
+          {books.map(book => (
+            <li key={book.id} className="flex justify-between items-center border-b py-2">
+              <span>{book.title} — {book.author}</span>
+              <div className="space-x-2">
+                <button onClick={() => handleEdit(book)} className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+                  Editar
+                </button>
+                <button onClick={() => handleDelete(book.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                  Excluir
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
