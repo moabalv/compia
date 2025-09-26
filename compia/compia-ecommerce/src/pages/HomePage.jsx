@@ -1,16 +1,16 @@
 // src/pages/HomePage.jsx
-import { useEffect, useState } from 'react';
-import { ProductCard } from '../components/ui/ProductCard';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { ProductCard } from "../components/ui/ProductCard";
+import { Link } from "react-router-dom";
 export const HomePage = () => {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch("/api/products")
       .then((response) => response.json()) // Converte a resposta para JSON
       .then((data) => setBooks(data)) // Atualiza o estado com os dados recebidos
-      .catch((error) => console.error('Erro ao buscar produtos:', error));
-  }, []); 
+      .catch((error) => console.error("Erro ao buscar produtos:", error));
+  }, []);
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -22,8 +22,11 @@ export const HomePage = () => {
           <ProductCard key={book.id} book={book} />
         ))}
       </div>
-      <Link to="/carrinho" className="rounded-lg bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600">
-          Ver Carrinho
+      <Link
+        to="/carrinho"
+        className="rounded-lg bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600"
+      >
+        Ver Carrinho
       </Link>
     </div>
   );
