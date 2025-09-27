@@ -11,6 +11,8 @@ import { CartPage } from './pages/CartPage.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage.jsx';
 import { AdminPage } from './pages/AdminPage.jsx'; 
+import { AdminLoginPage } from './pages/AdminLoginPage.jsx';
+import { ProtectedRoute } from './components/auth/ProtectedRoute.jsx';
 
 const router = createBrowserRouter([
   {
@@ -34,14 +36,24 @@ const router = createBrowserRouter([
         element: <CheckoutPage />,
       },
       {
-        path: '/confirmacao',
+        path: '/order-confirmation',
         element: <OrderConfirmationPage />,
       },
       {
-        path: '/admin', // Adicione a nova rota
-        element: <AdminPage />,
+        path: '/admin/login',
+        element: <AdminLoginPage />,
       },
-      
+      {
+        path: '/admin',
+        element: <ProtectedRoute />, 
+        children: [
+          {
+            index: true, 
+            element: <AdminPage />, 
+          }
+        ],
+      },
+
     ],
   },
 ]);

@@ -21,7 +21,6 @@ export const ProductDetailPage = () => {
       .then((res) => res.json())
       .then((data) => {
         setBook(data);
-        // Define valor padrão: físico se existir, senão digital
         setSelectedFormat(data.price.physical ? "physical" : "digital");
       })
       .catch((err) =>
@@ -52,9 +51,11 @@ export const ProductDetailPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Imagem do produto */}
-        <div className="h-96 w-full rounded-lg bg-gray-200 shadow-lg">
-          {/* Aqui você pode colocar a imagem do livro */}
-        </div>
+        <img 
+          src={book.coverUrl} 
+          alt={`Capa do livro ${book.title}`}
+          className="w-full h-auto max-h-[500px] object-contain rounded-lg shadow-lg mx-auto"
+        />
 
         {/* Informações do produto */}
         <div>

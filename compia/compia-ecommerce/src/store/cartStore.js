@@ -3,7 +3,6 @@ import { create } from 'zustand';
 export const useCartStore = create((set) => ({
   items: [],
 
-  // Ação para adicionar um produto ao carrinho (VERSÃO CORRIGIDA)
   addToCart: (product) => set((state) => {
     const existingItem = state.items.find((item) => item.id === product.id);
 
@@ -12,7 +11,7 @@ export const useCartStore = create((set) => ({
       return {
         items: state.items.map((item) =>
           item.id === product.id
-            ? { ...product, quantity: item.quantity + 1 } // CORREÇÃO: Usar "...product" garante que todos os dados (incluindo o preço) estejam sempre presentes.
+            ? { ...product, quantity: item.quantity + 1 } 
             : item
         ),
       };
